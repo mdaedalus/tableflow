@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="setup-container">
+  <div class="card wide">
+    <h1>Çalışanları Ekle</h1>
+    <p class="muted">Adım 3 / 3 — Her çalışan için isim ve şifre belirleyin</p>
+    <form method="POST" id="staffForm">
+      <div id="staffList">
+        <div class="staff-row">
+          <input type="text" name="staff_name" placeholder="Çalışan adı" required>
+          <input type="password" name="staff_password" placeholder="Şifre" required>
+          <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+        </div>
+      </div>
+      <button type="button" class="btn-secondary" onclick="addStaffRow()">+ Çalışan Ekle</button>
+      <button type="submit" class="btn-primary">🍽️ Restoranı Kur</button>
+    </form>
+  </div>
+</div>
+<script>
+function addStaffRow() {
+  const div = document.createElement('div');
+  div.className = 'staff-row';
+  div.innerHTML = `<input type="text" name="staff_name" placeholder="Çalışan adı" required>
+                   <input type="password" name="staff_password" placeholder="Şifre" required>
+                   <button type="button" class="btn-remove" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('staffList').appendChild(div);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="waiter-layout">
+  <header class="waiter-header">
+    <h1>Garson Paneli</h1>
+    <a href="{{ url_for('waiter.logout') }}" class="btn-secondary">Çıkış</a>
+  </header>
+
+  <h2>Masalar</h2>
+  <div class="tables-grid">
+    {% for t in tables %}
+      {% set o = orders.get(t.id) %}
+      <div class="table-card {% if t.is_occupied %}busy{% else %}free{% endif %}"
+           onclick="selectTable({{ t.id }}, {{ o.id if o else 'null' }})">
+        <h3>Masa {{ t.number }}</h3>
+        {% if o %}
+          <p class="muted">{{ "%.2f"|format(o.total) }} ₺</p>
+        {% else %}
+          <p class="muted">Boş</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">✕</span>
+    <h2 id="modalTitle">Masa</h2>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const products = {{ products|tojson }};
+const categories = {{ categories|tojson }};
+let currentTable = null, currentOrder = null;
+
+function selectTable(tid, oid) {
+  currentTable = tid;
+  currentOrder = oid;
+  document.getElementById('modalTitle').textContent = 'Masa ' + tid;
+  document.getElementById('modal').classList.remove('hidden');
+
+  if (!oid) {
+    document.getElementById('modalBody').innerHTML =
+      `<button class="btn-primary" onclick="openTable(${tid})">Masayı Aç</button>`;
+  } else {
+    renderOrder();
+  }
+}
+
+async function renderOrder() {
+  const r = await fetch(`/waiter/order/${currentOrder}/items`);
+  const data = await r.json();
+  let html = `<h3>Siparişler</h3><ul class="item-list">`;
+  data.items.forEach(i => {
+    html += `<li>${i.qty}× ${i.name} — ${i.price.toFixed(2)} ₺ 
+             ${i.status==='served' ? '✅' : `<button class="btn-mini" onclick="serve(${i.id})">Servis</button>`}</li>`;
+  });
+  html += `</ul><p><strong>Toplam: ${data.total.toFixed(2)} ₺</strong></p>`;
+
+  html += `<h3>Ürün Ekle</h3><select id="pSelect">`;
+  categories.forEach(c => {
+    html += `<optgroup label="${c.name_tr}">`;
+    products.filter(p => p.category_id === c.id).forEach(p => {
+      html += `<option value="${p.id}">${p.name_tr} — ${p.price} ₺</option>`;
+    });
+    html += `</optgroup>`;
+  });
+  html += `</select>
+    <input type="number" id="pQty" value="1" min="1" style="width:70px">
+    <button class="btn-primary" onclick="addItem()">Ekle</button>
+    <button class="btn-danger" onclick="closeTable()">Masayı Kapat</button>`;
+
+  document.getElementById('modalBody').innerHTML = html;
+}
+
+async function openTable(tid) {
+  const r = await fetch(`/waiter/table/${tid}/open`, {method:'POST'});
+  const d = await r.json();
+  if (d.order_id) { currentOrder = d.order_id; renderOrder(); }
+}
+
+async function addItem() {
+  const pid = document.getElementById('pSelect').value;
+  const qty = document.getElementById('pQty').value;
+  await fetch(`/waiter/order/${currentOrder}/add`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid, quantity: qty})
+  });
+  renderOrder();
+}
+
+async function serve(iid) {
+  await fetch(`/waiter/item/${iid}/serve`, {method:'POST'});
+  renderOrder();
+}
+
+async function closeTable() {
+  await fetch(`/waiter/table/${currentTable}/close`, {method:'POST'});
+  location.reload();
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+</script>
+{% endblock %}

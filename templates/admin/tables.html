@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app-layout">
+  {% include 'admin/_sidebar.html' %}
+  <main class="content">
+    <div class="row-between">
+      <h1>Masa Düzenle</h1>
+      <a href="{{ url_for('admin.tables_qr_pdf') }}" class="btn-primary">📄 QR Kodları PDF</a>
+    </div>
+
+    <div class="card">
+      <h3>Yeni Masa Ekle</h3>
+      <form method="POST" class="inline-form">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="number" placeholder="Masa No" required>
+        <input type="number" name="capacity" placeholder="Kapasite" value="4" min="1">
+        <button class="btn-primary">Ekle</button>
+      </form>
+    </div>
+
+    <table class="data-table">
+      <thead><tr><th>No</th><th>Kapasite</th><th>Durum</th><th>Garson</th><th>İşlemler</th></tr></thead>
+      <tbody>
+      {% for t in tables %}
+        <tr>
+          <td>
+            <form method="POST" action="{{ url_for('admin.update_table', tid=t.id) }}" class="inline">
+              <input type="text" name="number" value="{{ t.number }}" style="width:70px">
+              <input type="number" name="capacity" value="{{ t.capacity }}" style="width:70px">
+              <button class="btn-mini">💾</button>
+            </form>
+          </td>
+          <td>{{ t.capacity }} kişi</td>
+          <td>
+            {% if t.is_occupied %}<span class="badge busy">Dolu</span>
+            {% else %}<span class="badge free">Boş</span>{% endif %}
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.assign_waiter', tid=t.id) }}" class="inline">
+              <select name="waiter_id" onchange="this.form.submit()">
+                <option value="">— seç —</option>
+                {% for s in staff %}
+                  <option value="{{ s.id }}" {% if t.assigned_waiter_id==s.id %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_table', tid=t.id) }}" style="display:inline" onsubmit="return confirm('Silinsin mi?')">
+              <button class="btn-danger btn-mini">🗑️</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</div>
+{% endblock %}

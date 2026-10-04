@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="setup-container">
+  <div class="card">
+    <h1>Yönetici Girişi</h1>
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, m in msgs %}<div class="alert {{ cat }}">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <label>Şifre</label>
+      <input type="password" name="password" required>
+      <button type="submit" class="btn-primary">Giriş Yap</button>
+    </form>
+    <a href="{{ url_for('waiter.login') }}" class="link">Garson girişi →</a>
+  </div>
+</div>
+{% endblock %}

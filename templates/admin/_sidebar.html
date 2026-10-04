@@ -1,0 +1,12 @@
+<aside class="sidebar">
+  <div class="brand">🍽️ Yönetim</div>
+  <nav>
+    <a href="{{ url_for('admin.dashboard') }}">📊 Genel Bakış</a>
+    <a href="{{ url_for('admin.tables') }}">🪑 Masa Düzenle</a>
+    <a href="{{ url_for('admin.staff') }}">👨‍🍳 Çalışan Düzenle</a>
+    <a href="{{ url_for('admin.categories') }}">📂 Menü Başlıkları</a>
+    <a href="{{ url_for('admin.products') }}">🍔 Menü Düzenle</a>
+    <a href="{{ url_for('admin.live') }}">📡 Canlı Takip</a>
+  </nav>
+  <a href="{{ url_for('admin.logout') }}" class="logout">Çıkış</a>
+</aside>

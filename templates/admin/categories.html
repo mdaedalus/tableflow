@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app-layout">
+  {% include 'admin/_sidebar.html' %}
+  <main class="content">
+    <h1>Menü Başlıkları</h1>
+    <div class="card">
+      <form method="POST" class="inline-form">
+        <input type="text" name="name_tr" placeholder="Türkçe başlık" required>
+        <input type="text" name="name_en" placeholder="English title">
+        <button class="btn-primary">Ekle</button>
+      </form>
+    </div>
+    <div class="chips">
+      {% for c in categories %}
+        <div class="chip">
+          {{ c.name_tr }} <small>({{ c.name_en or '-' }})</small>
+          <form method="POST" action="{{ url_for('admin.delete_category', cid=c.id) }}" style="display:inline">
+            <button class="btn-remove">✕</button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  </main>
+</div>
+{% endblock %}

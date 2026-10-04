@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app-layout">
+  {% include 'admin/_sidebar.html' %}
+  <main class="content">
+    <h1>Canlı Takip</h1>
+    <div class="live-grid">
+      {% for t in tables %}
+        {% set o = orders.get(t.id) %}
+        <div class="live-card {% if t.is_occupied %}busy{% else %}free{% endif %}">
+          <h3>Masa {{ t.number }}</h3>
+          <p class="muted">Garson: {{ staff.get(t.assigned_waiter_id, '-') }}</p>
+          {% if o %}
+            <p><strong>{{ "%.2f"|format(o.total) }} ₺</strong></p>
+            <ul class="item-list">
+              {% for i in o.items %}
+                <li>
+                  {{ i.quantity }}× {{ i.product.name_tr }}
+                  {% if i.status == 'served' %}✅{% else %}⏳{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            <form method="POST" action="{{ url_for('admin.close_order', oid=o.id) }}" onsubmit="return confirm('Ücret alındı mı?')">
+              <button class="btn-primary btn-mini">💰 Ücret Alındı / Kapat</button>
+            </form>
+          {% else %}
+            <p class="muted">Boş</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </main>
+</div>
+{% endblock %}

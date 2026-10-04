@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="customer-page">
+  <header class="customer-header">
+    <h1>{{ restaurant.name }}</h1>
+    <p>Masa {{ table.number }}</p>
+    <div class="lang-switch">
+      <a href="?lang=tr" class="{% if lang=='tr' %}active{% endif %}">TR</a>
+      <a href="?lang=en" class="{% if lang=='en' %}active{% endif %}">EN</a>
+    </div>
+  </header>
+
+  {% if order_items %}
+    <section class="my-order">
+      <h3>{{ 'Mevcut Siparişleriniz' if lang=='tr' else 'Your Current Order' }}</h3>
+      <ul>
+        {% for i in order_items %}
+          <li>{{ i.qty }}× {{ i.name }}
+            {% if i.status=='served' %} ✅ {% else %} ⏳ {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
+  <nav class="cat-nav">
+    {% for c in categories %}
+      <a href="#cat-{{ c.id }}">{{ c.name_tr if lang=='tr' else (c.name_en or c.name_tr) }}</a>
+    {% endfor %}
+  </nav>
+
+  {% for c in categories %}
+    <section id="cat-{{ c.id }}" class="cat-section">
+      <h2>{{ c.name_tr if lang=='tr' else (c.name_en or c.name_tr) }}</h2>
+      <div class="product-list">
+        {% for p in grouped.get(c.id, []) %}
+          <div class="product-item">
+            {% if p.image %}
+              <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" alt="{{ p.name_tr }}">
+            {% endif %}
+            <div class="info">
+              <h4>{{ p.name_tr if lang=='tr' else (p.name_en or p.name_tr) }}</h4>
+              <p class="muted">{{ p.description_tr if lang=='tr' else (p.description_en or p.description_tr) }}</p>
+              <span class="price">{{ "%.2f"|format(p.price) }} ₺</span>
+            </div>
+            <button class="btn-add" onclick="addToCart({{ p.id }}, '{{ p.name_tr }}', {{ p.price }})">+</button>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+
+  <div id="cart" class="cart hidden">
+    <h4>🛒 {{ 'Sepet' if lang=='tr' else 'Cart' }}</h4>
+    <ul id="cartItems"></ul>
+    <button class="btn-primary" onclick="sendOrder()">{{ 'Siparişi Gönder' if lang=='tr' else 'Send Order' }}</button>
+  </div>
+</div>
+
+<script>
+const token = "{{ table.qr_token }}";
+let cart = {};
+
+function addToCart(id, name, price) {
+  if (!cart[id]) cart[id] = {name, price, quantity: 0};
+  cart[id].quantity++;
+  renderCart();
+}
+
+function renderCart() {
+  const el = document.getElementById('cart');
+  const list = document.getElementById('cartItems');
+  const keys = Object.keys(cart);
+  if (!keys.length) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  list.innerHTML = keys.map(id =>
+    `<li>${cart[id].quantity}× ${cart[id].name} — ${(cart[id].price*cart[id].quantity).toFixed(2)} ₺</li>`
+  ).join('');
+}
+
+async function sendOrder() {
+  const items = Object.entries(cart).map(([id, v]) => ({product_id: parseInt(id), quantity: v.quantity}));
+  const r = await fetch(`/m/${token}/order`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({items})
+  });
+  if (r.ok) { cart = {}; location.reload(); }
+  else alert('Hata oluştu.');
+}
+</script>
+{% endblock %}

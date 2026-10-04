@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="app-layout">
+  {% include 'admin/_sidebar.html' %}
+  <main class="content">
+    <h1>Çalışan Düzenle</h1>
+
+    <div class="card">
+      <h3>Yeni Çalışan</h3>
+      <form method="POST" class="inline-form">
+        <input type="text" name="name" placeholder="İsim" required>
+        <input type="password" name="password" placeholder="Şifre" required>
+        <button class="btn-primary">Ekle</button>
+      </form>
+    </div>
+
+    <table class="data-table">
+      <thead><tr><th>İsim</th><th>Durum</th><th>Şifre Değiştir</th><th>İşlem</th></tr></thead>
+      <tbody>
+      {% for s in staff %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td>{% if s.is_active %}<span class="badge free">Aktif</span>{% else %}<span class="badge busy">Pasif</span>{% endif %}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.update_staff_password', sid=s.id) }}" class="inline">
+              <input type="password" name="password" placeholder="Yeni şifre">
+              <button class="btn-mini">Değiştir</button>
+            </form>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.delete_staff', sid=s.id) }}" onsubmit="return confirm('Pasife alınsın mı?')">
+              <button class="btn-danger btn-mini">Pasife Al</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</div>
+{% endblock %}
